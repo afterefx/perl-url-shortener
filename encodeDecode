@@ -1,0 +1,80 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+my @alphabet = split(//,"a1Qb2RcS3dU4VeW5XfY6Zg7h8i9j0kAlBmCnDoEpFqGrHsItJuKvLwMxNyOzP");
+my $strAlphabet = "a1Qb2RcS3dU4VeW5XfY6Zg7h8i9j0kAlBmCnDoEpFqGrHsItJuKvLwMxNyOzP";
+my $hash;
+my $number;
+
+
+print "What do you want to do: \n (1) Encode\n (2) Decode\n\n Enter you option: ";
+chomp (my $choice = <STDIN>);
+
+if($choice == 1)
+{
+	print "Enter the number to encode: ";
+	chomp($number = <STDIN>);
+	$hash = encode($number, @alphabet);
+	print "The hash for " . $number . " is " . $hash . "\n"; 
+
+}
+else
+{
+	print "Enter the string to decode: ";
+	chomp($hash = <STDIN>);
+	my $length = scalar(@alphabet);
+	$number = decode($hash, $strAlphabet, $length);
+	print "The number for " . $hash . " is " . $number . "\n";
+}
+
+##################################################################
+#function
+##################################################################
+sub encode
+{
+	my ($num, @alpha) = @_; #integer to convert and alphabet to use
+	return "a" unless $num; #special case for zero
+	my $n = scalar(@alpha); #get length of alphabet
+	my $hash = ""; #string to store hash in
+	while ($num > 0)
+	{
+		$hash .= $alpha[$num % $n ]; #append text to string from appropriate index positon
+		$num = int($num / $n); #remove length of alphabet from integer since it's in the hash now
+	}
+
+	return $hash;
+}
+
+sub decode
+{
+	#hash to convert to int, alphabet to use, length of alphabet
+	my ($hash, $alpha, $n) = @_; 
+
+	#initialize these values
+	my $num = 0; 
+	my $pos = 0;
+	my $letter;
+
+	#work with the list
+	my @hashlist = split //, $hash; #split it up
+	@hashlist = reverse(@hashlist); #reverse the list
+
+	#hash length
+	my $len = (length($hash)-1);
+	print "length: " . $len . "\n";
+
+	#go through each letter and convert
+	foreach $letter (@hashlist)
+	{
+		print $letter ;
+		$num += (index($alpha, $letter) * ($n ** $len));
+		print $num . "\n";
+		$len--;
+	}
+
+	return $num;
+
+
+}
+
