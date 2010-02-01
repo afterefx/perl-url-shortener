@@ -1,17 +1,21 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use DBI;
 
 my @alphabet = split(//,"a1Qb2RcS3dU4VeW5XfY6Zg7h8i9j0kAlBmCnDoEpFqGrHsItJuKvLwMxNyOzP");
 my $strAlphabet = "a1Qb2RcS3dU4VeW5XfY6Zg7h8i9j0kAlBmCnDoEpFqGrHsItJuKvLwMxNyOzP";
 my $hash;
 my $number;
+my $dbfile = 'url.db';
+my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","",{RaiseError => 1},) or die $DBI::errstr;
+my $length = scalar(@alphabet);
 
 
-print "What do you want to do: \n (1) Encode\n (2) Decode\n\n Enter you option: ";
+print "What do you want to do: \n (1) Encode\n (2) Decode\n (3) Insert URL\n (4) Retrieve url\n Enter you option: ";
 chomp (my $choice = <STDIN>);
 
-if($choice == 1)
+if($choice == 1) #encode a string
 {
 	print "Enter the number to encode: ";
 	chomp($number = <STDIN>);
@@ -19,13 +23,40 @@ if($choice == 1)
 	print "The hash for " . $number . " is " . $hash . "\n"; 
 
 }
-else
+elsif($choice == 2) #decode a string
 {
 	print "Enter the string to decode: ";
 	chomp($hash = <STDIN>);
-	my $length = scalar(@alphabet);
 	$number = decode($hash, $strAlphabet, $length);
 	print "The number for " . $hash . " is " . $number . "\n";
+}
+elsif($choice == 3) #insert url
+{
+	print "Enter the url to insert into the table: ";
+	chomp(my $userURL = <STDIN>);
+
+	#insert into table
+	$dbh->do( "INSERT INTO url VALUES ( $number, "$userURL")") or die $dbh->errstr;
+
+	#get hash for the row id
+	$hash = encode($number, @alphabet);
+
+	#print results
+	print "The url $userURL can be found at
+		http://lighthouse.tamucc.edu/s/$hash";
+
+}
+else #retrieve url
+{
+	print "Enter the hash to retrieve";
+	chomp($hash = <STDIN>);
+	$number = decode($hash, $strAlphabet, $length);
+	my $stn = $dbh->prepare("select url from url where id == ? limit 1") or die;  # not sure about dying
+	$sth->execute($number);
+	my ($userURL) = $sth->fetchrow_array;
+       	my $userURL = $dbh->selectrow_array( SELECT url FROM url WHERE id == $number);
+	print "The url for ". $hash . " is " . $userURL . "\n";
+
 }
 
 ##################################################################
@@ -78,3 +109,5 @@ sub decode
 
 }
 
+$dbh->commit;
+$dbh->disconnect;
