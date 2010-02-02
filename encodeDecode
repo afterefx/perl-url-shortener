@@ -35,32 +35,36 @@ elsif($choice == 3) #insert url
 	print "Enter the url to insert into the table: ";
 	chomp(my $userURL = <STDIN>);
 
+	print "Enter the number of the row to enter it into: ";
+	chomp($number = <STDIN>);
+
 	#insert into table
-	$dbh->do( "INSERT INTO url VALUES ( $number, "$userURL")") or die $dbh->errstr;
+	#my $dbh->do( "INSERT INTO url VALUES ( $number, '$userURL')") or die $dbh->errstr;
+       	my $stn = $dbh->prepare(qq{ INSERT INTO url (id, url) VALUES (?, ?) }) or die;
+  	$stn->execute($number, "$userURL") or die $dbh->errstr;
 
 	#get hash for the row id
 	$hash = encode($number, @alphabet);
 
 	#print results
-	print "The url $userURL can be found at
-		http://lighthouse.tamucc.edu/s/$hash";
+	print "The url $userURL can be found at http://lighthouse.tamucc.edu/s/$hash\n";
 
 }
 else #retrieve url
 {
-	print "Enter the hash to retrieve";
+	print "Enter the hash to retrieve: ";
 	chomp($hash = <STDIN>);
 	$number = decode($hash, $strAlphabet, $length);
+	print "The number returned was: " . $number . "\n";
 	my $stn = $dbh->prepare("select url from url where id == ? limit 1") or die;  # not sure about dying
-	$sth->execute($number);
-	my ($userURL) = $sth->fetchrow_array;
-       	my $userURL = $dbh->selectrow_array( SELECT url FROM url WHERE id == $number);
+	$stn->execute($number) or die $dbh->errstr;
+	my ($userURL) = $stn->fetchrow_array;
 	print "The url for ". $hash . " is " . $userURL . "\n";
 
 }
 
 ##################################################################
-#function
+#functions
 ##################################################################
 sub encode
 {
@@ -93,14 +97,14 @@ sub decode
 
 	#hash length
 	my $len = (length($hash)-1);
-	print "length: " . $len . "\n";
+#print "length: " . $len . "\n";
 
 	#go through each letter and convert
 	foreach $letter (@hashlist)
 	{
-		print $letter ;
+#print $letter ;
 		$num += (index($alpha, $letter) * ($n ** $len));
-		print $num . "\n";
+#print $num . "\n";
 		$len--;
 	}
 
@@ -109,5 +113,5 @@ sub decode
 
 }
 
-$dbh->commit;
+#$dbh->commit;
 $dbh->disconnect;
