@@ -13,6 +13,7 @@ my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","",{RaiseError => 1},) or 
 my $length = scalar(@alphabet);
 
 
+#Check if the table exists
 isTable($table, $dbh);
 
 print "What do you want to do: \n (1) Encode\n (2) Decode\n (3) Insert URL\n (4) Retrieve url\n Enter you option: ";
@@ -38,18 +39,12 @@ elsif($choice == 3) #insert url
 	print "Enter the url to insert into the table: ";
 	chomp(my $userURL = <STDIN>);
 
-	#print "Enter the number of the row to enter it into: ";
-	#chomp($number = <STDIN>);
-
 	#insert into table
-	#my $dbh->do( "INSERT INTO url VALUES ( $number, '$userURL')") or die $dbh->errstr;
        	my $stn = $dbh->prepare(qq{ INSERT INTO $table (url) VALUES (?) }) or die;
   	$stn->execute("$userURL") or die $dbh->errstr;
 
 	#get last insert id
 	$number = $dbh->last_insert_id('undef', 'undef', $table, 'url');
-	print 'Last insert id ' . $number . "\n";
-	
 
 	#get hash for the row id
 	$hash = encode($number, @alphabet);
@@ -60,13 +55,18 @@ elsif($choice == 3) #insert url
 }
 else #retrieve url
 {
+	#ask for the hash
 	print "Enter the hash to retrieve: ";
 	chomp($hash = <STDIN>);
+
 	$number = decode($hash, $strAlphabet, $length);
-	print "The number returned was: " . $number . "\n";
+
+	#query the id for the url
 	my $stn = $dbh->prepare("select url from $table where id == ? limit 1") or die;  # not sure about dying
 	$stn->execute($number) or die $dbh->errstr;
 	my ($userURL) = $stn->fetchrow_array;
+
+	#print results
 	print "The url for ". $hash . " is " . $userURL . "\n";
 
 }
@@ -78,7 +78,7 @@ sub isTable
 {
 	my ($table,$connection) = @_;
 
-	#create the table
+	#create the table if it does not exist
 	$connection->do("CREATE TABLE IF NOT EXISTS $table(id INTEGER PRIMARY KEY ASC AUTOINCREMENT, url varchar(2048))");
 	
 
@@ -115,14 +115,14 @@ sub decode
 
 	#hash length
 	my $len = (length($hash)-1);
-	#print "length: " . $len . "\n";
+	#print "length: " . $len . "\n"; #debug statement
 
 	#go through each letter and convert
 	foreach $letter (@hashlist)
 	{
-	#print $letter ;
+	#print $letter ; #debug statement
 		$num += (index($alpha, $letter) * ($n ** $len));
-	#print $num . "\n";
+	#print $num . "\n"; #debug statement
 		$len--;
 	}
 
