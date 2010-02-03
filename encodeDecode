@@ -39,15 +39,7 @@ elsif($choice == 3) #insert url
 	print "Enter the url to insert into the table: ";
 	chomp(my $userURL = <STDIN>);
 
-	#insert into table
-       	my $stn = $dbh->prepare(qq{ INSERT INTO $table (url) VALUES (?) }) or die;
-  	$stn->execute("$userURL") or die $dbh->errstr;
-
-	#get last insert id
-	$number = $dbh->last_insert_id('undef', 'undef', $table, 'url');
-
-	#get hash for the row id
-	$hash = encode($number, @alphabet);
+	$hash = insert($table, $dbh, $userURL, @alphabet);
 
 	#print results
 	print "The url $userURL can be found at http://lighthouse.tamucc.edu/s/$hash\n";
@@ -59,15 +51,17 @@ else #retrieve url
 	print "Enter the hash to retrieve: ";
 	chomp($hash = <STDIN>);
 
-	$number = decode($hash, $strAlphabet, $length);
-
-	#query the id for the url
-	my $stn = $dbh->prepare("select url from $table where id == ? limit 1") or die;  # not sure about dying
-	$stn->execute($number) or die $dbh->errstr;
-	my ($userURL) = $stn->fetchrow_array;
+	my $userURL = retrieve($hash, $strAlphabet, $length, $table, $dbh);
 
 	#print results
-	print "The url for ". $hash . " is " . $userURL . "\n";
+	if( defined $userURL)
+	{
+		print "The url for ". $hash . " is " . $userURL . "\n";
+	}
+	else
+	{
+		print "No url exists for this hash\n";
+	}
 
 }
 
@@ -80,8 +74,38 @@ sub isTable
 
 	#create the table if it does not exist
 	$connection->do("CREATE TABLE IF NOT EXISTS $table(id INTEGER PRIMARY KEY ASC AUTOINCREMENT, url varchar(2048))");
-	
 
+}
+
+sub insert
+{
+	my ($table, $dbh, $userURL, @alphabet) = @_;
+
+	#insert into table
+       	my $stn = $dbh->prepare(qq{ INSERT INTO $table (url) VALUES (?) }) or die;
+  	$stn->execute("$userURL") or die $dbh->errstr;
+
+	#get last insert id
+	my $number = $dbh->last_insert_id('undef', 'undef', $table, 'url');
+
+	#get hash for the row id
+	my $hash = encode($number, @alphabet);
+
+	return $hash;
+
+}
+
+sub retrieve
+{
+	my ($hash, $strAlphabet, $length, $table, $dbh) = @_;
+
+	my $number = decode($hash, $strAlphabet, $length);
+
+	#query the id for the url
+	my $stn = $dbh->prepare("select url from $table where id == ? limit 1") or die;  # not sure about dying
+	$stn->execute($number) or print "No url exists for this hash";
+
+	return $stn->fetchrow_array;
 }
 
 sub encode
