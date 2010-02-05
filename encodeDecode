@@ -3,8 +3,8 @@ use strict;
 use warnings;
 use DBI;
 
-my @alphabet = split(//,"a1Qb2RcS3dU4VeW5XfY6Zg7h8i9j0kAlBmCnDoEpFqGrHsItJuKvLwMxNyOzP");
 my $strAlphabet = "a1Qb2RcS3dU4VeW5XfY6Zg7h8i9j0kAlBmCnDoEpFqGrHsItJuKvLwMxNyOzP";
+my @alphabet = split(//,$strAlphabet);
 my $hash;
 my $number;
 my $dbfile = 'url.db';
@@ -17,12 +17,12 @@ my $length = scalar(@alphabet);
 isTable($table, $dbh);
 
 print "What do you want to do: \n (1) Encode\n (2) Decode\n (3) Insert URL\n (4) Retrieve url\n Enter you option: ";
-chomp (my $choice = <STDIN>);
+chomp (my $choice = <>);
 
 if($choice == 1) #encode a string
 {
 	print "Enter the number to encode: ";
-	chomp($number = <STDIN>);
+	chomp($number = <>);
 	$hash = encode($number, @alphabet);
 	print "The hash for " . $number . " is " . $hash . "\n"; 
 
@@ -30,14 +30,14 @@ if($choice == 1) #encode a string
 elsif($choice == 2) #decode a string
 {
 	print "Enter the string to decode: ";
-	chomp($hash = <STDIN>);
+	chomp($hash = <>);
 	$number = decode($hash, $strAlphabet, $length);
 	print "The number for " . $hash . " is " . $number . "\n";
 }
 elsif($choice == 3) #insert url
 {
 	print "Enter the url to insert into the table: ";
-	chomp(my $userURL = <STDIN>);
+	chomp(my $userURL = <>);
 
 	$hash = insert($table, $dbh, $userURL, @alphabet);
 
@@ -49,7 +49,7 @@ else #retrieve url
 {
 	#ask for the hash
 	print "Enter the hash to retrieve: ";
-	chomp($hash = <STDIN>);
+	chomp($hash = <>);
 
 	my $userURL = retrieve($hash, $strAlphabet, $length, $table, $dbh);
 
